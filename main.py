@@ -4,52 +4,62 @@ import shutil
 import os
 from ultralytics import YOLO
 
+# Initialize FastAPI
 app = FastAPI()
 
-# Load model once (VERY IMPORTANT)
+# Load YOLO model
 model = YOLO("model/best.pt")
 
+# Temporary upload folder
 UPLOAD_FOLDER = "temp"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 
+# Home route
 @app.get("/")
 def home():
     return {"message": "Number Plate OCR API is running"}
 
 
+# Prediction route
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)):
     start_time = time.time()
 
-    # Save uploaded image temporarily
+    # Save uploaded file
     file_path = os.path.join(UPLOAD_FOLDER, file.filename)
-
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
-    # Run model
+    # Run YOLO model
     results = model(file_path)
-
     detections = results[0]
 
-    output = []
+    boxes = detections.boxes
 
-    for box in detections.boxes:
+    # Sort boxes left-to-right (important for correct plate order)
+    sorted_boxes = sorted(boxes, key=lambda x: float(x.xyxy[0][0]))
+
+    characters = []
+    confidences = []
+
+    for box in sorted_boxes:
         conf = float(box.conf[0])
         cls = int(box.cls[0])
-
-        # For OCR models, usually class names = characters or plate
         label = model.names[cls]
 
-        output.append({
-            "text": label,
-            "confidence": round(conf, 3)
-        })
+        characters.append(label)
+        confidences.append(round(conf, 3))
+
+    # Combine characters into full plate number
+    plate_text = "".join(characters)
 
     end_time = time.time()
 
     return {
-        "predictions": output,
+        "plate_number": plate_text,
+        "characters": characters,
+        "confidences": confidences,
+        "avg_confidence": round(sum(confidences) / len(confidences), 3) if confidences else 0,
         "total_time": round(end_time - start_time, 3)
     }

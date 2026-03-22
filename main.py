@@ -1,3 +1,10 @@
+#Step1: Run dir inside the venv (PS D:\uv_Demo> dir)
+#Step2: uvicorn main:app --reload (PS D:\uv_Demo> uvicorn main:app --reload)
+#Step3: Open the browser and go to http://127.0.0.1:8000/docs (you'll need to add /docs to the URL)
+#Step4: Click on Post/predict and then "Try it out" 
+#Step5: Upload an image and click on "Execute"
+#Step6: The result will be displayed below
+
 from fastapi import FastAPI, UploadFile, File
 import time
 import shutil

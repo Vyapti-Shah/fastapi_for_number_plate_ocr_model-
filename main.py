@@ -10,9 +10,18 @@ import time
 import shutil
 import os
 from ultralytics import YOLO
+from fastapi.middleware.cors import CORSMiddleware
 
 # Initialize FastAPI
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Load YOLO model
 model = YOLO("model/best.pt")

@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Number Plate OCR</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            height: 100vh;
+
+            /* Gradient background */
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Glass container */
+        .container {
+            width: 420px;
+            padding: 30px;
+            border-radius: 20px;
+
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+
+            border: 1px solid rgba(255, 255, 255, 0.2);
+
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+
+            color: white;
+            text-align: center;
+        }
+
+        h2 {
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            opacity: 0.7;
+            margin-bottom: 15px;
+        }
+
+        input {
+            margin: 15px 0;
+            color: white;
+        }
+
+        button {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+            opacity: 0.9;
+        }
+
+        img {
+            margin-top: 15px;
+            max-width: 100%;
+            border-radius: 10px;
+        }
+
+        .result-box {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .highlight {
+            font-size: 20px;
+            font-weight: bold;
+            color: #00f2fe;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h2>Number Plate OCR</h2>
+        <p class="subtitle">Upload an image to detect number plate</p>
+
+        <input type="file" id="imageInput" onchange="previewImage()">
+
+        <br>
+        <img id="preview" src="" alt="Preview" style="display:none;">
+
+        <br><br>
+
+        <button onclick="uploadImage()">Predict</button>
+
+        <div class="result-box" id="result" style="display:none;"></div>
+    </div>
+
+    <script>
+        function previewImage() {
+            const file = document.getElementById("imageInput").files[0];
+            const preview = document.getElementById("preview");
+
+            if (file) {
+                preview.src = URL.createObjectURL(file);
+                preview.style.display = "block";
+            }
+        }
+
+        async function uploadImage() {
+            const fileInput = document.getElementById("imageInput");
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert("Please select an image");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("file", file);
+
+            const resultBox = document.getElementById("result");
+            resultBox.style.display = "block";
+            resultBox.innerHTML = "Processing...";
+
+            try {
+                const response = await fetch("http://127.0.0.1:8000/predict", {
+                    method: "POST",
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                resultBox.innerHTML = `
+                <p><b>Plate Number:</b> <span class="highlight">${data.plate_number}</span></p>
+                <p><b>Average Confidence:</b> ${data.avg_confidence}</p>
+                <p><b>Time Taken:</b> ${data.total_time} sec</p>
+            `;
+            } catch (error) {
+                resultBox.innerHTML = "Error connecting to API";
+            }
+        }
+    </script>
+
+</body>
+
+</html>

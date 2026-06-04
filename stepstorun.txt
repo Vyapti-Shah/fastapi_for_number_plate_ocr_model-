@@ -1,0 +1,4 @@
+py -m venv .venv (only if starting from scratch) (Note: if running in another pc then delete the previous venv folder and run this)
+.\.venv\Scripts\Activate.ps1
+pip install -r req.txt (only if starting from scratch)
+uvicorn main:app --reload
